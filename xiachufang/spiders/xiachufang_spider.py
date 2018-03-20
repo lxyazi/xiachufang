@@ -8,11 +8,22 @@ class XiachufangSpiderSpider(scrapy.Spider):
     start_urls = ['https://www.xiachufang.com/recipe/101790129/']
 
     def parse(self, response):
-        node_list = response.xpath(".//body//div[@class='ings']/table")
         items = []
-        for node in node_list:
-            title = node.xpath(".//td[@class='name']/a/text()").extract()
-            ings = node.xpath(".//td[@class='unit']/text()").extract()
+        ings_level = []
+        node_list = response.xpath(".//body//div[@class='ings']/table")
 
-            for i, j in zip(title, ings):
-                print(i +":" + j.strip())
+        # title：菜名； ings：用料及程度
+        for node in node_list:
+            ings_name = node.xpath(".//td[@class='name']/a/text()").extract()
+            ings_lvl = node.xpath(".//td[@class='unit']/text()").extract()
+
+        print(ings_name)
+        print(ings_lvl)
+        # title = ((response.xpath(".//body//div[@class='pure-g']//h1[@class='page-title']/text()").extract())[0]).extract()\
+        #
+        # ings = zip(ings_name, ings_level)
+        #
+        # for value in ings:
+        #     print(value)
+
+        # print(title)

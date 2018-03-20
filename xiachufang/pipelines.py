@@ -8,4 +8,8 @@
 
 class XiachufangPipeline(object):
     def process_item(self, item, spider):
-        return item
+        if type(item) == XiachufangItem:
+            pass
+
+        if type(item) == XiachufangTpyeItem:
+            pass

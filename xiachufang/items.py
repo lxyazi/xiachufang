@@ -8,8 +8,15 @@
 import scrapy
 
 
+
 class XiachufangItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
     title = scrapy.Field()
     ings = scrapy.Field()
+
+
+class XiachufangTpyeItem(scrapy.Item):
+    cates_list_info = scrapy.Field()
+    cates_list_first = scrapy.Field()
+    cates_list_second = scrapy.Field()
