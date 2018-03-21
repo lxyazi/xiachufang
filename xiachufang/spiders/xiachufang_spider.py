@@ -1,29 +1,34 @@
 # -*- coding: utf-8 -*-
 import scrapy
 from xiachufang.items import XiachufangItem
+from xiachufang.items import XiachufangTpyeItem
 
-class XiachufangSpiderSpider(scrapy.Spider):
-    name = 'xiachufang_spider'
-    allowed_domains = ['www.xiachufang.com']
-    start_urls = ['https://www.xiachufang.com/recipe/101790129/']
 
-    def parse(self, response):
-        items = []
-        ings_level = []
-        node_list = response.xpath(".//body//div[@class='ings']/table")
+class XiachufangtypeSpiderSpider(scrapy.Spider):
+	name = 'xiachufang_spider'
+	allowed_domains = ['xiachufang.com']
+	start_urls = ['https://www.xiachufang.com/category/']
 
-        # title：菜名； ings：用料及程度
-        for node in node_list:
-            ings_name = node.xpath(".//td[@class='name']/a/text()").extract()
-            ings_lvl = node.xpath(".//td[@class='unit']/text()").extract()
+	def parse(self, response):
+		node_list = response.xpath(".//div[@class='cates-list clearfix has-bottom-border pb20 mb20']")
 
-        print(ings_name)
-        print(ings_lvl)
-        # title = ((response.xpath(".//body//div[@class='pure-g']//h1[@class='page-title']/text()").extract())[0]).extract()\
-        #
-        # ings = zip(ings_name, ings_level)
-        #
-        # for value in ings:
-        #     print(value)
+		for node in node_list:
+			xiachufangType = XiachufangTpyeItem()
 
-        # print(title)
+			xiachufangType['cates_list_info'] = \
+				node.xpath(".//div[@class='cates-list-info ml15 float-left']/h3/text()").extract()[0]
+			xiachufangType['cates_list_first'] = node.xpath(
+				".//div[@class='cates-list-all clearfix hidden']/h4/text() | .//div[@class='cates-list-all clearfix hidden']/h4/a/text()").extract()
+			xiachufangType['cates_list_second'] = node.xpath(
+				".//div[@class='cates-list-all clearfix hidden']/ul[@class=' has-bottom-border']/li/a/text()").extract()[
+				0]
+
+			print("------------test1------------------")
+			print(node.xpath(".//div[@class='cates-list-info ml15 float-left']/h3/text()").extract())
+
+			print(node.xpath(
+				".//div[@class='cates-list-all clearfix hidden']/h4/text() | .//div[@class='cates-list-all clearfix hidden']/h4/a/text()").extract())
+
+			print(node.xpath(
+				".//div[@class='cates-list-all clearfix hidden']/ul[@class=' has-bottom-border']/li/a/text()").extract())
+			print("------------test2------------------")
