@@ -18,6 +18,5 @@ class XiachufangItem(scrapy.Item):
 
 class XiachufangTpyeItem(scrapy.Item):
     cates_list_info = scrapy.Field()
-    cates_list_first = scrapy.Field()
-    cates_list_second = scrapy.Field()
+    cates_list = scrapy.Field()
     cates_list_herf = scrapy.Field()
