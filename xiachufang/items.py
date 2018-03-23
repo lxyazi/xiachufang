@@ -10,10 +10,9 @@ import scrapy
 
 
 class XiachufangItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
     title = scrapy.Field()
     ings = scrapy.Field()
+    # TODO:图片资源
 
 
 class XiachufangTpyeItem(scrapy.Item):
