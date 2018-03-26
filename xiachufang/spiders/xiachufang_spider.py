@@ -15,7 +15,7 @@ class XiachufangtypeSpiderSpider(scrapy.Spider):
         for node1 in node_list_1:
             cates_list_info = node1.xpath("./div[@class='cates-list-info ml15 float-left']/h3/text()").extract()[0]
             h4_cates_list = []
-            h4_cates_list_herf = []
+            h4_cates_list_href = []
             node_list_h4 = node1.xpath(".//div[@class='cates-list-all clearfix hidden']/h4")
 
             print("------------test1------------------")
@@ -26,10 +26,10 @@ class XiachufangtypeSpiderSpider(scrapy.Spider):
 
                 if len(node_h4.xpath("./a")) != 0:
                     h4_cates_list.append(node_h4.xpath("./a/text()").extract()[0])
-                    h4_cates_list_herf.append(node_h4.xpath("./a/@href").extract()[0])
+                    h4_cates_list_href.append(node_h4.xpath("./a/@href").extract()[0])
                 else:
                     h4_cates_list.append(" ")
-                    h4_cates_list_herf.append(" ")
+                    h4_cates_list_href.append(" ")
 
             node_list_ul = node1.xpath(".//div[@class='cates-list-all clearfix hidden']/ul")
             i = 0
@@ -40,11 +40,11 @@ class XiachufangtypeSpiderSpider(scrapy.Spider):
                     item = XiachufangTpyeItem()
                     item['cates_list_info'] = cates_list_info
                     item['cates_list'] = h4_cates_list[i]
-                    item['cates_list_herf'] = "https://www.xiachufang.com" + h4_cates_list_herf[i]
+                    item['cates_list_href'] = "https://www.xiachufang.com" + h4_cates_list_href[i]
                     yield item
-                    yield scrapy.Request(item['cates_list_herf'], callback=self.listParse)
+                    yield scrapy.Request(item['cates_list_href'], callback=self.listParse)
 
-                    # yield scrapy.Request(item['cates_list_herf'], meta={'cates_list_info': item['cates_list_info']},
+                    # yield scrapy.Request(item['cates_list_href'], meta={'cates_list_info': item['cates_list_info']},
                     #                      callback=self.listParse)
                     # count += 1
 
@@ -52,7 +52,7 @@ class XiachufangtypeSpiderSpider(scrapy.Spider):
                     print("------------test1------------------")
                     print(item['cates_list_info'])
                     print(item['cates_list'])
-                    print(item['cates_list_herf'])
+                    print(item['cates_list_href'])
                     print("------------test2------------------")
 
                 # 若ul下无目录，则使用h4作为目录item
@@ -61,11 +61,11 @@ class XiachufangtypeSpiderSpider(scrapy.Spider):
                         item = XiachufangTpyeItem()
                         item['cates_list_info'] = cates_list_info
                         item['cates_list'] = node_li.xpath("./a/text()").extract()[0]
-                        item['cates_list_herf'] = "https://www.xiachufang.com" + node_li.xpath("./a/@href").extract()[0]
+                        item['cates_list_href'] = "https://www.xiachufang.com" + node_li.xpath("./a/@href").extract()[0]
                         yield item
-                        yield scrapy.Request(item['cates_list_herf'], callback=self.listParse)
+                        yield scrapy.Request(item['cates_list_href'], callback=self.listParse)
 
-                        # yield scrapy.Request(item['cates_list_herf'], meta={'cates_list_info': item['cates_list_info']},
+                        # yield scrapy.Request(item['cates_list_href'], meta={'cates_list_info': item['cates_list_info']},
                         #                      callback=self.listParsee)
                         # count += 1
 
@@ -73,18 +73,101 @@ class XiachufangtypeSpiderSpider(scrapy.Spider):
                         print("------------test1------------------")
                         print(item['cates_list_info'])
                         print(item['cates_list'])
-                        print(item['cates_list_herf'])
+                        print(item['cates_list_href'])
                         print("------------test2------------------")
 
     def listParse(self, response):
-        # TODO
+        # 是否下一页
+        indexNext = True
+
         # 提取分类标题
         title = response.xpath(".//div[@class='pure-g' or @class='pure-u align-middle']//h1/text()").extract()[0]
 
+        # 遍历该页中的每一道菜
+        node_list = response.xpath(".//div[@class='normal-recipe-list']//li")
+        for node in node_list:
+            url = "https://www.xiachufang.com" + node.xpath("./a/@href").extract()[0]
+            if len(node.xpath(".//p[@class='stats']/span[@class='bold score']")) != 0:
+                bold_score = node.xpath(".//p[@class='stats']/span[@class='bold score']/text()").extract()[0]
+            else:
+                bold_score = 0
+            yield scrapy.Request(url, meta={"bold_score": bold_score, "href": url, "typeTitle": title},
+                                 callback=self.itemParse)
 
-        pass
-
+        # 下一页
+        if len(node_list) == 0 or len(response.xpath(".//span[@class='next']")) == 1:
+            indexNext = False
+        if indexNext:
+            yield scrapy.Request("https://www.xiachufang.com" +
+                                 response.xpath(".//div[@class='pager']./a[@class='next']/@href").extract()[0],
+                                 callback=self.listParse())
 
     def itemParse(self, response):
         # TODO
-        pass
+
+        # 创建时间  create_time   ----------
+        # 收藏人数  collection_number   ----------
+        # URL   herf   ----------
+        # 7天内做过的人数  bold_score   ----------
+        # 菜名    title   ----------
+        # 分类信息  type_title   ----------
+        # 综合评分  score   ----------
+        # 多少人做过这道菜  people_number   ----------
+        # 描述    description   ----------
+        # 用料    recipe_ingredient   ----------
+        # 做法步骤  step   ----------
+        # 小贴士   tip   ----------
+
+        item = XiachufangItem()
+
+        item['bold_score'] = response.meta['bold_score']
+        item['href'] = response.meta['href']
+        item['type_title'] = response.meta['typeTitle']
+        item['title'] = response.xpath(".//h1[@class='page-title']").extract()[0]
+        item['collection_number'] = response.xpath(".//div[@class='pv']/text()").extract()[0]
+        item['create_time'] = response.xpath(".//div[@class='time']/span/text()").extract()[0]
+
+        # --------------------------------------------------------------------------------------------------------------------
+        if len(response.xpath(".//div[@class='tip-container']/div[@class='tip']")) != 0:
+            item['tip'] = response.xpath(".//div[@class='tip-container']/div[@class='tip']/text()").extract()[0]
+        else:
+            item['tip'] = "无"
+        # --------------------------------------------------------------------------------------------------------------------
+
+        item['description'] = response.xpath(".//div[@class='desc mt30']/text()").extract()[0]
+
+        # --------------------------------------------------------------------------------------------------------------------
+        if len(response.xpath(".//div[@class='score float-left']/span[@class='number']")) != 0:
+            item['score'] = response.xpath(".//div[@class='score float-left']/span[@class='number']/text()").extract()[
+                0]
+        else:
+            item['score'] = -1
+        # --------------------------------------------------------------------------------------------------------------------
+
+        item['people_number'] = \
+            response.xpath(".//div[@class='cooked float-left']/span[@class='number']/text()").extract()[0]
+
+        # item['recipe_ingredient'] = 'test'
+        # item['step'] = 'test'
+
+        ingsNodeList = response.xpath(".//div[@class='ings']/table/tbody/tr[@itemprop='recipeIngredient']")
+        # 用料
+        ings1 = []
+        ings2 = []
+        for node in ingsNodeList:
+            # 用料是否存在
+            if len(node.xpath("./td[@class='name']")) == 0:
+                ings1.append('略')
+            else:
+                ings1.append(node.xpath("./td[@class='name']/text()").extract()[0])
+
+            # 用量是否存在
+            if len(node.xpath("./td[@class='name']")) == 0:
+                ings1.append('无')
+            else:
+                ings2.append(node.xpath("./td[@class='unit']/text()").extract()[0])
+        item['recipe_ingredient'] = zip(ings1, ings2)
+
+        item['step'] = response.xpath(".//div[@class='steps']//li/p/text()").extract()
+
+        yield item
