@@ -38,7 +38,7 @@ class XiachufangItem(scrapy.Item):
     type_title = scrapy.Field()
 
     # # 用户名称
-    # inventor = scrapy.Field()
+    # author = scrapy.Field()
     #
     # # # 用户唯一ID
     # # inventor_id = scrapy.Field()

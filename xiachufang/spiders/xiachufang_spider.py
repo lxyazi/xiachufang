@@ -155,33 +155,36 @@ class XiachufangtypeSpiderSpider(scrapy.Spider):
         # item['step'] = 'test'
 
         # --------------------------------------------------------------------------------------------------------------------
-        ingsNodeList = response.xpath(".//div[@class='ings']/table/tbody/tr[@itemprop='recipeIngredient']")
+        ingsNodeList = response.xpath(".//div[@class='ings']//tr[@itemprop='recipeIngredient']")
         # 用料
         ings1 = []
         ings2 = []
         for node in ingsNodeList:
             # 用料是否存在
-            if len(node.xpath("./td[@class='name']")) == 0:
-                ings1.append('略')
+            if len(node.xpath("./td[@class='name']/a")) == 0:
+                ings1.append((node.xpath("./td[@class='name']/text()").extract()[0]).strip())
             else:
-                ings1.append(node.xpath("./td[@class='name']/text()").extract()[0])
+                ings1.append((node.xpath("./td[@class='name']/a/text()").extract()[0]).strip())
 
             # 用量是否存在
-            if len(node.xpath("./td[@class='name']")) == 0:
+            if len(node.xpath("./td[@class='unit']")) == 0:
                 ings1.append('无')
             else:
-                ings2.append(node.xpath("./td[@class='unit']/text()").extract()[0])
+                ings2.append((node.xpath("./td[@class='unit']/text()").extract()[0]).strip())
 
         ings = ""
         for (v1, v2) in zip(ings1, ings2):
-            ings += " ## " + v1 + " *:* " + v2
+            ings = ings + " ## " + v1 + " *:* " + v2
         item['recipe_ingredient'] = ings
         # --------------------------------------------------------------------------------------------------------------------
 
         steps = ""
         for step in response.xpath(".//div[@class='steps']//li/p/text()").extract():
-            steps += " * " + step
+            steps = steps + " * " + step
         item['step'] = steps
         # --------------------------------------------------------------------------------------------------------------------
 
         yield item
+
+    def itemWithAuthorParse(self, response):
+        item = response.meta['item']
