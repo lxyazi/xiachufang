@@ -90,7 +90,7 @@ class XiachufangtypeSpiderSpider(scrapy.Spider):
             if len(node.xpath(".//p[@class='stats']/span[@class='bold score']")) != 0:
                 bold_score = node.xpath(".//p[@class='stats']/span[@class='bold score']/text()").extract()[0]
             else:
-                bold_score = 0
+                bold_score = "0"
             yield scrapy.Request(url, meta={"bold_score": bold_score, "href": url, "typeTitle": title},
                                  callback=self.itemParse)
 
@@ -99,8 +99,8 @@ class XiachufangtypeSpiderSpider(scrapy.Spider):
             indexNext = False
         if indexNext:
             yield scrapy.Request("https://www.xiachufang.com" +
-                                 response.xpath(".//div[@class='pager']./a[@class='next']/@href").extract()[0],
-                                 callback=self.listParse())
+                                 response.xpath(".//div[@class='pager']/a[@class='next']/@href").extract()[0],
+                                 callback=self.listParse)
 
     def itemParse(self, response):
         # TODO
@@ -120,28 +120,32 @@ class XiachufangtypeSpiderSpider(scrapy.Spider):
 
         item = XiachufangItem()
 
+        item['title'] = (response.xpath(".//h1[@class='page-title']/text()").extract()[0]).strip()
         item['bold_score'] = response.meta['bold_score']
         item['href'] = response.meta['href']
         item['type_title'] = response.meta['typeTitle']
-        item['title'] = response.xpath(".//h1[@class='page-title']").extract()[0]
         item['collection_number'] = response.xpath(".//div[@class='pv']/text()").extract()[0]
         item['create_time'] = response.xpath(".//div[@class='time']/span/text()").extract()[0]
 
         # --------------------------------------------------------------------------------------------------------------------
         if len(response.xpath(".//div[@class='tip-container']/div[@class='tip']")) != 0:
-            item['tip'] = response.xpath(".//div[@class='tip-container']/div[@class='tip']/text()").extract()[0]
+            item['tip'] = (
+            response.xpath(".//div[@class='tip-container']/div[@class='tip']/text()").extract()[0]).strip()
         else:
             item['tip'] = "无"
         # --------------------------------------------------------------------------------------------------------------------
 
-        item['description'] = response.xpath(".//div[@class='desc mt30']/text()").extract()[0]
+        if len(response.xpath(".//div[@class='desc mt30']")) != 0:
+            item['description'] = (response.xpath(".//div[@class='desc mt30']/text()").extract()[0]).strip()
+        else:
+            item['tip'] = "无"
 
         # --------------------------------------------------------------------------------------------------------------------
         if len(response.xpath(".//div[@class='score float-left']/span[@class='number']")) != 0:
             item['score'] = response.xpath(".//div[@class='score float-left']/span[@class='number']/text()").extract()[
                 0]
         else:
-            item['score'] = -1
+            item['score'] = "-1"
         # --------------------------------------------------------------------------------------------------------------------
 
         item['people_number'] = \
@@ -150,6 +154,7 @@ class XiachufangtypeSpiderSpider(scrapy.Spider):
         # item['recipe_ingredient'] = 'test'
         # item['step'] = 'test'
 
+        # --------------------------------------------------------------------------------------------------------------------
         ingsNodeList = response.xpath(".//div[@class='ings']/table/tbody/tr[@itemprop='recipeIngredient']")
         # 用料
         ings1 = []
@@ -166,8 +171,17 @@ class XiachufangtypeSpiderSpider(scrapy.Spider):
                 ings1.append('无')
             else:
                 ings2.append(node.xpath("./td[@class='unit']/text()").extract()[0])
-        item['recipe_ingredient'] = zip(ings1, ings2)
 
-        item['step'] = response.xpath(".//div[@class='steps']//li/p/text()").extract()
+        ings = ""
+        for (v1, v2) in zip(ings1, ings2):
+            ings += " ## " + v1 + " *:* " + v2
+        item['recipe_ingredient'] = ings
+        # --------------------------------------------------------------------------------------------------------------------
+
+        steps = ""
+        for step in response.xpath(".//div[@class='steps']//li/p/text()").extract():
+            steps += " * " + step
+        item['step'] = steps
+        # --------------------------------------------------------------------------------------------------------------------
 
         yield item

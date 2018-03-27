@@ -37,6 +37,17 @@ class XiachufangItem(scrapy.Item):
     # 分类信息
     type_title = scrapy.Field()
 
+    # # 用户名称
+    # inventor = scrapy.Field()
+    #
+    # # # 用户唯一ID
+    # # inventor_id = scrapy.Field()
+    #
+    # #用户URL
+    # inventor_url = scrapy.Field()
+
+    # TODO：用户信息
+
 # 总分类信息
 class XiachufangTpyeItem(scrapy.Item):
     cates_list_info = scrapy.Field()
