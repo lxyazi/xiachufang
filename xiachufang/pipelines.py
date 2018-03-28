@@ -8,12 +8,14 @@
 import json
 from xiachufang.items import XiachufangItem
 from xiachufang.items import XiachufangTpyeItem
+from xiachufang.items import XiachufangAuthorItem
 
 
 class XiachufangPipeline(object):
 	def __init__(self):
 		self.fileType = open("fileTpye.json", "w")
 		self.fileItem = open("fileItem.json", "w")
+		self.fileAuthor = open("fileAuthor.json", "w")
 
 	def process_item(self, item, spider):
 		if type(item) == XiachufangItem:
@@ -26,6 +28,12 @@ class XiachufangPipeline(object):
 			self.fileType.write(content)
 			return item
 
+		if type(item) == AuthorItem:
+			content = json.dumps(dict(item), ensure_ascii=False) + ",\n"
+			self.fileAuthor.write(content)
+			return item
+
 	def close_sipder(self, spider):
 		self.fileType.close()
 		self.fileitem.close()
+		self.fileAuthor.close()

@@ -2,6 +2,7 @@
 import scrapy
 from xiachufang.items import XiachufangItem
 from xiachufang.items import XiachufangTpyeItem
+from xiachufang.items import XiachufangAuthorItem
 
 
 class XiachufangtypeSpiderSpider(scrapy.Spider):
@@ -121,16 +122,17 @@ class XiachufangtypeSpiderSpider(scrapy.Spider):
         item = XiachufangItem()
 
         item['title'] = (response.xpath(".//h1[@class='page-title']/text()").extract()[0]).strip()
+        item['author'] = (response.xpath(".//div[@class='author']//span[@itemprop='name']/text()")).extract()[0].strip()
         item['bold_score'] = response.meta['bold_score']
         item['href'] = response.meta['href']
         item['type_title'] = response.meta['typeTitle']
-        item['collection_number'] = response.xpath(".//div[@class='pv']/text()").extract()[0]
-        item['create_time'] = response.xpath(".//div[@class='time']/span/text()").extract()[0]
+        item['collection_number'] = response.xpath(".//div[@class='pv']/text()").extract()[0].strip()
+        item['create_time'] = response.xpath(".//div[@class='time']/span/text()").extract()[0].strip()
 
         # --------------------------------------------------------------------------------------------------------------------
         if len(response.xpath(".//div[@class='tip-container']/div[@class='tip']")) != 0:
             item['tip'] = (
-            response.xpath(".//div[@class='tip-container']/div[@class='tip']/text()").extract()[0]).strip()
+                response.xpath(".//div[@class='tip-container']/div[@class='tip']/text()").extract()[0]).strip()
         else:
             item['tip'] = "无"
         # --------------------------------------------------------------------------------------------------------------------
@@ -184,7 +186,60 @@ class XiachufangtypeSpiderSpider(scrapy.Spider):
         item['step'] = steps
         # --------------------------------------------------------------------------------------------------------------------
 
+        author_url = "https://www.xiachufang.com" + response.xpath(".//div[@class='author']/a/@href").extract()[0]
+
         yield item
+        # yield scrapy.Request(author_url, meta={"item" : item, "author_url" : author_url}, callback=self.itemWithAuthorParse)
+        yield scrapy.Request(author_url, meta={"author_url": author_url, "author": item['author']},
+                             callback=self.authorParse)
 
     def itemWithAuthorParse(self, response):
-        item = response.meta['item']
+        # item = response.meta['item']
+        # item["author_url"] = response.meta['author_url']
+        # if(len(response.xpath(".//div[@class='gray-font']/div/span")) == 3):
+        #     item["author"] = (response.xpath(".//div[@class='gray-font']/div/span[1]/text()").extract()[0]).strip()
+        #     item[""]
+        pass
+
+    def authorParse(self, response):
+        item = XiachufangAuthorItem()
+        item["author"] = response.meta['author']
+        item["author_url"] = response.meta['author_url']
+        item["author_sex"] = response.xpath(".//div[@class='gray-font']/div/span[1]/text()").extract()[0].strip()
+        if (len(response.xpath(".//div[@class='gray-font']/div/span")) == 2):
+            item["author_time"] = response.xpath(".//div[@class='gray-font']/div/span[2]/text()").extract()[0].strip()
+            item["author_location2"] = "略"
+            item["author_profession"] = "无"
+        if (len(response.xpath(".//div[@class='gray-font']/div/span")) == 3):
+            item["author_location1"] = response.xpath(".//div[@class='gray-font']/div/span[2]/text()").extract()[
+                0].strip()
+            item["author_location2"] = "略"
+            item["author_profession"] = "无"
+            item["author_time"] = response.xpath(".//div[@class='gray-font']/div/span[3]/text()").extract()[0].strip()
+        if (len(response.xpath(".//div[@class='gray-font']/div/span")) == 4):
+            item["author_location1"] = response.xpath(".//div[@class='gray-font']/div/span[2]/text()").extract()[
+                0].strip()
+            item["author_location2"] = "略"
+            item["author_profession"] = response.xpath(".//div[@class='gray-font']/div/span[3]/text()").extract()[
+                0].strip()
+            item["author_time"] = response.xpath(".//div[@class='gray-font']/div/span[4]/text()").extract()[0].strip()
+        if (len(response.xpath(".//div[@class='gray-font']/div/span")) == 5):
+            item["author_location1"] = response.xpath(".//div[@class='gray-font']/div/span[2]/text()").extract()[
+                0].strip()
+            item["author_location2"] = response.xpath(".//div[@class='gray-font']/div/span[3]/text()").extract()[
+                0].strip()
+            item["author_profession"] = response.xpath(".//div[@class='gray-font']/div/span[4]/text()").extract()[
+                0].strip()
+            item["author_time"] = response.xpath(".//div[@class='gray-font']/div/span[5]/text()").extract()[0].strip()
+
+        item["author_follow"] = \
+            response.xpath(".//div[@class='pure-u-1-2 following-num']//a[@class='bold font16']/text()").extract()[
+                0].strip()
+        item["author_follow_url"] = "https://www.xiachufang.com" + response.xpath(
+            ".//div[@class='pure-u-1-2 following-num']//a[@class='bold font16']/@href").extract()[0].strip()
+        item["author_be_followed"] = \
+            response.xpath(".//div[@class='pure-u-1-2']//a[@class='bold font16']/text()").extract()[0].strip()
+        item["author_be_followed_url"] = "https://www.xiachufang.com" + response.xpath(
+            ".//div[@class='pure-u-1-2']//a[@class='bold font16']/@href").extract()[0].strip()
+
+        yield item

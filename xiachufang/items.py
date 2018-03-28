@@ -37,16 +37,18 @@ class XiachufangItem(scrapy.Item):
     # 分类信息
     type_title = scrapy.Field()
 
-    # # 用户名称
-    # author = scrapy.Field()
+    # 用户名称
+    author = scrapy.Field()
     #
+    # #用户URL
+    # author_url = scrapy.Field()
+
     # # # 用户唯一ID
     # # inventor_id = scrapy.Field()
     #
-    # #用户URL
-    # inventor_url = scrapy.Field()
 
     # TODO：用户信息
+
 
 # 总分类信息
 class XiachufangTpyeItem(scrapy.Item):
@@ -54,11 +56,41 @@ class XiachufangTpyeItem(scrapy.Item):
     cates_list = scrapy.Field()
     cates_list_href = scrapy.Field()
 
+
 # 子分类信息
 class TpyeInfoItem(scrapy.Item):
     # TODO
     pass
 
 
+class XiachufangAuthorItem(scrapy.Item):
+    # 作者姓名
+    author = scrapy.Field()
 
+    # 作者网站url，可用作唯一id
+    author_url = scrapy.Field()
 
+    # 作者性别
+    author_sex = scrapy.Field()
+
+    # 作者地理位置
+    author_location1 = scrapy.Field()
+    author_location2 = scrapy.Field()
+
+    #作者职业
+    author_profession = scrapy.Field()
+
+    # 作者加入时间
+    author_time = scrapy.Field()
+
+    # 作者关注列表
+    author_follow = scrapy.Field()
+
+    # 作者关注列表url
+    author_follow_url = scrapy.Field()
+
+    # 作者被关注列表
+    author_be_followed = scrapy.Field()
+
+    # 作者被关注列表url
+    author_be_followed_url = scrapy.Field()
